@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 import argparse
 import sqlite3
-from knapsack import knapsack_max_protein, greedy_max_protein, knapsack_max_calories, knapsack_max_fat, knapsack_max_carbs, knapsack_max_calorie_protein
+from knapsack import (knapsack_max_protein, greedy_max_protein, ilp_max_protein,
+                     knapsack_max_calories, ilp_max_calories,
+                     knapsack_max_fat, ilp_max_fat,
+                     knapsack_max_carbs, ilp_max_carbs,
+                     knapsack_max_calorie_protein, ilp_max_calorie_protein)
 import os
 
 def get_db_connection():
@@ -57,6 +61,7 @@ def max_protein(args):
     """Find items that maximize protein within a calorie limit."""
     calorie_limit = args.calories
     item_limit = args.items
+    algorithm = args.algorithm
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -84,18 +89,28 @@ def max_protein(args):
     if item_limit:
         print(f"Limited to a maximum of {item_limit} items.")
     
-    # Always display algorithm name
-    algorithm_name = ""
-    
-    # Choose algorithm based on problem size
-    if len(items) > 100 and calorie_limit > 1000:
+    # Choose algorithm based on user selection or problem size
+    if algorithm == 'ilp':
+        algorithm_name = "Integer Linear Programming (optimal solution)"
+        print(f"Using {algorithm_name}...")
+        try:
+            selected_items = ilp_max_protein(items, calorie_limit, item_limit)
+        except ImportError:
+            print("PuLP is not installed. Falling back to dynamic programming...")
+            selected_items = knapsack_max_protein(items, calorie_limit, item_limit)
+    elif algorithm == 'greedy':
         algorithm_name = "Greedy heuristic (not knapsack - using protein-to-calorie ratio)"
         print(f"Using {algorithm_name}...")
         selected_items = greedy_max_protein(items, calorie_limit, item_limit)
-    else:
-        algorithm_name = "Optimal 0/1 knapsack with dynamic programming"
-        print(f"Using {algorithm_name}...")
-        selected_items = knapsack_max_protein(items, calorie_limit, item_limit)
+    else:  # 'dp' or auto
+        if len(items) > 100 and calorie_limit > 1000 and algorithm != 'dp':
+            algorithm_name = "Greedy heuristic (not knapsack - using protein-to-calorie ratio)"
+            print(f"Using {algorithm_name}...")
+            selected_items = greedy_max_protein(items, calorie_limit, item_limit)
+        else:
+            algorithm_name = "Optimal 0/1 knapsack with dynamic programming"
+            print(f"Using {algorithm_name}...")
+            selected_items = knapsack_max_protein(items, calorie_limit, item_limit)
     
     if selected_items:
         total_calories = sum(item[1] for item in selected_items)
@@ -122,6 +137,7 @@ def max_calories(args):
     """Find items that maximize calories while meeting a minimum protein requirement."""
     protein_min = args.protein
     item_limit = args.items
+    algorithm = args.algorithm
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -149,11 +165,18 @@ def max_calories(args):
     if item_limit:
         print(f"Limited to a maximum of {item_limit} items.")
     
-    algorithm_name = "Mixed approach: exhaustive search for small datasets, greedy for large"
-    print(f"Using {algorithm_name}...")
-    
-    # Use the new knapsack function
-    selected_items = knapsack_max_calories(items, protein_min, item_limit)
+    if algorithm == 'ilp':
+        algorithm_name = "Integer Linear Programming (optimal solution)"
+        print(f"Using {algorithm_name}...")
+        try:
+            selected_items = ilp_max_calories(items, protein_min, item_limit)
+        except ImportError:
+            print("PuLP is not installed. Falling back to mixed approach...")
+            selected_items = knapsack_max_calories(items, protein_min, item_limit)
+    else:
+        algorithm_name = "Mixed approach: exhaustive search for small datasets, greedy for large"
+        print(f"Using {algorithm_name}...")
+        selected_items = knapsack_max_calories(items, protein_min, item_limit)
     
     if selected_items:
         total_calories = sum(item[1] for item in selected_items)
@@ -180,6 +203,7 @@ def max_fat(args):
     """Find items that maximize total fat while meeting a minimum protein requirement."""
     protein_min = args.protein
     item_limit = args.items
+    algorithm = args.algorithm
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -207,11 +231,18 @@ def max_fat(args):
     if item_limit:
         print(f"Limited to a maximum of {item_limit} items.")
         
-    algorithm_name = "Mixed approach: exhaustive search for small datasets, greedy for large"
-    print(f"Using {algorithm_name}...")
-    
-    # Use the new knapsack function
-    selected_items = knapsack_max_fat(items, protein_min, item_limit)
+    if algorithm == 'ilp':
+        algorithm_name = "Integer Linear Programming (optimal solution)"
+        print(f"Using {algorithm_name}...")
+        try:
+            selected_items = ilp_max_fat(items, protein_min, item_limit)
+        except ImportError:
+            print("PuLP is not installed. Falling back to mixed approach...")
+            selected_items = knapsack_max_fat(items, protein_min, item_limit)
+    else:
+        algorithm_name = "Mixed approach: exhaustive search for small datasets, greedy for large"
+        print(f"Using {algorithm_name}...")
+        selected_items = knapsack_max_fat(items, protein_min, item_limit)
     
     if selected_items:
         total_calories = sum(item[1] for item in selected_items if item[1] is not None)
@@ -240,6 +271,7 @@ def max_carbs(args):
     """Find items that maximize carbs while meeting a minimum protein requirement."""
     protein_min = args.protein
     item_limit = args.items
+    algorithm = args.algorithm
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -267,11 +299,18 @@ def max_carbs(args):
     if item_limit:
         print(f"Limited to a maximum of {item_limit} items.")
         
-    algorithm_name = "Mixed approach: exhaustive search for small datasets, greedy for large"
-    print(f"Using {algorithm_name}...")
-    
-    # Use the new knapsack function
-    selected_items = knapsack_max_carbs(items, protein_min, item_limit)
+    if algorithm == 'ilp':
+        algorithm_name = "Integer Linear Programming (optimal solution)"
+        print(f"Using {algorithm_name}...")
+        try:
+            selected_items = ilp_max_carbs(items, protein_min, item_limit)
+        except ImportError:
+            print("PuLP is not installed. Falling back to mixed approach...")
+            selected_items = knapsack_max_carbs(items, protein_min, item_limit)
+    else:
+        algorithm_name = "Mixed approach: exhaustive search for small datasets, greedy for large"
+        print(f"Using {algorithm_name}...")
+        selected_items = knapsack_max_carbs(items, protein_min, item_limit)
     
     if selected_items:
         total_calories = sum(item[1] for item in selected_items if item[1] is not None)
@@ -299,6 +338,7 @@ def max_carbs(args):
 def max_calorie_protein(args):
     """Find items that maximize both calories and protein with a limit on items."""
     item_limit = args.items if args.items else 5  # Default to 5 items if not specified
+    algorithm = args.algorithm
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -323,10 +363,16 @@ def max_calorie_protein(args):
         return
     
     print(f"Finding maximum calorie-protein combination with {item_limit} items...")
-    print("Using top-K selection with weighted calorie-protein scoring")
-    
-    # Use the new function
-    selected_items = knapsack_max_calorie_protein(items, item_limit)
+    if algorithm == 'ilp':
+        print(f"Using {algorithm}...")
+        try:
+            selected_items = ilp_max_calorie_protein(items, item_limit)
+        except ImportError:
+            print("PuLP is not installed. Falling back to weighted scoring...")
+            selected_items = knapsack_max_calorie_protein(items, item_limit)
+    else:
+        print(f"Using top-K selection with weighted calorie-protein scoring")
+        selected_items = knapsack_max_calorie_protein(items, item_limit)
     
     if selected_items:
         total_calories = sum(item[1] for item in selected_items)
@@ -368,6 +414,8 @@ def main():
     max_protein_parser.add_argument('calories', type=int, help='Maximum calorie limit')
     max_protein_parser.add_argument('--company', help='Filter by company name (partial match)')
     max_protein_parser.add_argument('--items', type=int, help='Maximum number of items to include')
+    max_protein_parser.add_argument('--algorithm', choices=['dp', 'greedy', 'ilp'], default='auto',
+                                   help='Algorithm to use: dp (dynamic programming), greedy, or ilp (integer linear programming)')
     max_protein_parser.set_defaults(func=max_protein)
     
     # Max calories command
@@ -375,6 +423,8 @@ def main():
     max_calories_parser.add_argument('protein', type=int, help='Minimum protein required (grams)')
     max_calories_parser.add_argument('--company', help='Filter by company name (partial match)')
     max_calories_parser.add_argument('--items', type=int, help='Maximum number of items to include')
+    max_calories_parser.add_argument('--algorithm', choices=['mixed', 'ilp'], default='mixed',
+                                    help='Algorithm to use: mixed (exhaustive/greedy) or ilp (integer linear programming)')
     max_calories_parser.set_defaults(func=max_calories)
     
     # Max fat command
@@ -382,6 +432,8 @@ def main():
     max_fat_parser.add_argument('protein', type=int, help='Minimum protein required (grams)')
     max_fat_parser.add_argument('--company', help='Filter by company name (partial match)')
     max_fat_parser.add_argument('--items', type=int, help='Maximum number of items to include')
+    max_fat_parser.add_argument('--algorithm', choices=['mixed', 'ilp'], default='mixed',
+                               help='Algorithm to use: mixed (exhaustive/greedy) or ilp (integer linear programming)')
     max_fat_parser.set_defaults(func=max_fat)
     
     # Max carbs command
@@ -389,14 +441,18 @@ def main():
     max_carbs_parser.add_argument('protein', type=int, help='Minimum protein required (grams)')
     max_carbs_parser.add_argument('--company', help='Filter by company name (partial match)')
     max_carbs_parser.add_argument('--items', type=int, help='Maximum number of items to include')
+    max_carbs_parser.add_argument('--algorithm', choices=['mixed', 'ilp'], default='mixed',
+                                 help='Algorithm to use: mixed (exhaustive/greedy) or ilp (integer linear programming)')
     max_carbs_parser.set_defaults(func=max_carbs)
     
-    # Add the new max-calorie-protein command
+    # Max calorie-protein command
     max_calorie_protein_parser = subparsers.add_parser('max-calorie-protein', 
                                                      help='Find items that maximize both calories and protein')
     max_calorie_protein_parser.add_argument('--items', type=int, default=5, 
                                           help='Maximum number of items to include (default: 5)')
     max_calorie_protein_parser.add_argument('--company', help='Filter by company name (partial match)')
+    max_calorie_protein_parser.add_argument('--algorithm', choices=['weighted', 'ilp'], default='weighted',
+                                          help='Algorithm to use: weighted (scoring) or ilp (integer linear programming)')
     max_calorie_protein_parser.set_defaults(func=max_calorie_protein)
     
     args = parser.parse_args()

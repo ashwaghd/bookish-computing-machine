@@ -55,6 +55,42 @@ def greedy_max_protein(items, calorie_limit, item_limit=None):
     
     return selected_items
 
+def ilp_max_protein(items, calorie_limit, item_limit=None):
+    try:
+        import pulp
+    except ImportError:
+        print("PuLP is required for ILP optimization. Install with: pip install pulp")
+        return []
+    
+    n = len(items)
+    
+    # Create the model
+    model = pulp.LpProblem("MaxProtein", pulp.LpMaximize)
+    
+    # Create binary variables for each item
+    x = [pulp.LpVariable(f"x_{i}", cat=pulp.LpBinary) for i in range(n)]
+    
+    # Objective: maximize protein
+    model += pulp.lpSum([items[i][2] * x[i] for i in range(n)])
+    
+    # Constraint: stay within calorie limit
+    model += pulp.lpSum([items[i][1] * x[i] for i in range(n)]) <= calorie_limit
+    
+    # Constraint: limit number of items if specified
+    if item_limit is not None:
+        model += pulp.lpSum([x[i] for i in range(n)]) <= item_limit
+    
+    # Solve the model
+    model.solve(pulp.PULP_CBC_CMD(msg=False))
+    
+    # Get the selected items
+    selected_items = []
+    for i in range(n):
+        if pulp.value(x[i]) == 1:
+            selected_items.append(items[i])
+    
+    return selected_items
+
 def knapsack_max_calories(items, protein_min, item_limit=None):
     valid_items = [item for item in items if item[1] is not None and item[2] is not None 
                   and item[1] > 0 and item[2] > 0]
@@ -103,6 +139,47 @@ def knapsack_max_calories(items, protein_min, item_limit=None):
                 total_protein += item[2]
                 
         return selected_items
+
+def ilp_max_calories(items, protein_min, item_limit=None):
+    try:
+        import pulp
+    except ImportError:
+        print("PuLP is required for ILP optimization. Install with: pip install pulp")
+        return []
+    
+    valid_items = [item for item in items if item[1] is not None and item[2] is not None 
+                  and item[1] > 0 and item[2] > 0]
+    
+    n = len(valid_items)
+    if n == 0:
+        return []
+    
+    # Create the model
+    model = pulp.LpProblem("MaxCalories", pulp.LpMaximize)
+    
+    # Create binary variables for each item
+    x = [pulp.LpVariable(f"x_{i}", cat=pulp.LpBinary) for i in range(n)]
+    
+    # Objective: maximize calories
+    model += pulp.lpSum([valid_items[i][1] * x[i] for i in range(n)])
+    
+    # Constraint: meet minimum protein requirement
+    model += pulp.lpSum([valid_items[i][2] * x[i] for i in range(n)]) >= protein_min
+    
+    # Constraint: limit number of items if specified
+    if item_limit is not None:
+        model += pulp.lpSum([x[i] for i in range(n)]) <= item_limit
+    
+    # Solve the model
+    model.solve(pulp.PULP_CBC_CMD(msg=False))
+    
+    # Get the selected items
+    selected_items = []
+    for i in range(n):
+        if pulp.value(x[i]) == 1:
+            selected_items.append(valid_items[i])
+    
+    return selected_items
 
 def knapsack_max_fat(items, protein_min, item_limit=None):
     valid_items = [item for item in items if item[2] > 0 and item[5] is not None]
@@ -157,6 +234,46 @@ def knapsack_max_fat(items, protein_min, item_limit=None):
                 
         return selected_items
 
+def ilp_max_fat(items, protein_min, item_limit=None):
+    try:
+        import pulp
+    except ImportError:
+        print("PuLP is required for ILP optimization. Install with: pip install pulp")
+        return []
+    
+    valid_items = [item for item in items if item[2] > 0 and item[5] is not None]
+    
+    n = len(valid_items)
+    if n == 0:
+        return []
+    
+    # Create the model
+    model = pulp.LpProblem("MaxFat", pulp.LpMaximize)
+    
+    # Create binary variables for each item
+    x = [pulp.LpVariable(f"x_{i}", cat=pulp.LpBinary) for i in range(n)]
+    
+    # Objective: maximize fat
+    model += pulp.lpSum([valid_items[i][5] * x[i] for i in range(n)])
+    
+    # Constraint: meet minimum protein requirement
+    model += pulp.lpSum([valid_items[i][2] * x[i] for i in range(n)]) >= protein_min
+    
+    # Constraint: limit number of items if specified
+    if item_limit is not None:
+        model += pulp.lpSum([x[i] for i in range(n)]) <= item_limit
+    
+    # Solve the model
+    model.solve(pulp.PULP_CBC_CMD(msg=False))
+    
+    # Get the selected items
+    selected_items = []
+    for i in range(n):
+        if pulp.value(x[i]) == 1:
+            selected_items.append(valid_items[i])
+    
+    return selected_items
+
 def knapsack_max_carbs(items, protein_min, item_limit=None):
     valid_items = [item for item in items if item[2] > 0 and item[6] is not None]
     
@@ -205,6 +322,46 @@ def knapsack_max_carbs(items, protein_min, item_limit=None):
                 
         return selected_items
 
+def ilp_max_carbs(items, protein_min, item_limit=None):
+    try:
+        import pulp
+    except ImportError:
+        print("PuLP is required for ILP optimization. Install with: pip install pulp")
+        return []
+    
+    valid_items = [item for item in items if item[2] > 0 and item[6] is not None]
+    
+    n = len(valid_items)
+    if n == 0:
+        return []
+    
+    # Create the model
+    model = pulp.LpProblem("MaxCarbs", pulp.LpMaximize)
+    
+    # Create binary variables for each item
+    x = [pulp.LpVariable(f"x_{i}", cat=pulp.LpBinary) for i in range(n)]
+    
+    # Objective: maximize carbs
+    model += pulp.lpSum([valid_items[i][6] * x[i] for i in range(n)])
+    
+    # Constraint: meet minimum protein requirement
+    model += pulp.lpSum([valid_items[i][2] * x[i] for i in range(n)]) >= protein_min
+    
+    # Constraint: limit number of items if specified
+    if item_limit is not None:
+        model += pulp.lpSum([x[i] for i in range(n)]) <= item_limit
+    
+    # Solve the model
+    model.solve(pulp.PULP_CBC_CMD(msg=False))
+    
+    # Get the selected items
+    selected_items = []
+    for i in range(n):
+        if pulp.value(x[i]) == 1:
+            selected_items.append(valid_items[i])
+    
+    return selected_items
+
 def knapsack_max_calorie_protein(items, item_limit):
     valid_items = [item for item in items if item[1] is not None and item[2] is not None 
                   and item[1] > 0 and item[2] > 0]
@@ -224,5 +381,44 @@ def knapsack_max_calorie_protein(items, item_limit):
     selected_items = []
     for i in range(min(item_limit, len(items_with_score))):
         selected_items.append(items_with_score[i][0])
+    
+    return selected_items
+
+def ilp_max_calorie_protein(items, item_limit):
+    try:
+        import pulp
+    except ImportError:
+        print("PuLP is required for ILP optimization. Install with: pip install pulp")
+        return []
+    
+    valid_items = [item for item in items if item[1] is not None and item[2] is not None 
+                  and item[1] > 0 and item[2] > 0]
+    
+    n = len(valid_items)
+    if n == 0:
+        return []
+    
+    # Create the model
+    model = pulp.LpProblem("MaxCalorieProtein", pulp.LpMaximize)
+    
+    # Create binary variables for each item
+    x = [pulp.LpVariable(f"x_{i}", cat=pulp.LpBinary) for i in range(n)]
+    
+    # Objective: maximize weighted sum of calories and protein
+    # Give protein a higher weight to make it equally important to calories
+    model += pulp.lpSum([valid_items[i][1] * x[i] for i in range(n)]) + \
+             pulp.lpSum([valid_items[i][2] * 20 * x[i] for i in range(n)])
+    
+    # Constraint: limit number of items
+    model += pulp.lpSum([x[i] for i in range(n)]) <= item_limit
+    
+    # Solve the model
+    model.solve(pulp.PULP_CBC_CMD(msg=False))
+    
+    # Get the selected items
+    selected_items = []
+    for i in range(n):
+        if pulp.value(x[i]) == 1:
+            selected_items.append(valid_items[i])
     
     return selected_items
