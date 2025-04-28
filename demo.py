@@ -61,6 +61,7 @@ def run_command(command, description=None):
 def main():
     print("\n" + "=" * 80)
     print("\nFAST FOOD NUTRITION DATABASE CLI DEMO\n")
+    print("By: Trenonn Shumway, Schuyler Baer, and Ash Wagner\n")
     print("=" * 80 + "\n")
     print("This demo will showcase the main features of the Fast Food Nutrition CLI.")
     print("Press Enter at any time during the wait to proceed to the next command.\n")
@@ -80,8 +81,8 @@ def main():
                 "Finding items that maximize protein within 1000 calories using dynamic programming")
     
     # Max protein with company filter
-    run_command("python3 nutrition_cli.py max-protein 1500 --company 'Subway' --algorithm greedy", 
-                "Finding Subway items that maximize protein within 1500 calories using greedy algorithm")
+    run_command("python3 nutrition_cli.py max-protein 1500 --company 'Wendy' --algorithm greedy", 
+                "Finding Wendys items that maximize protein within 1500 calories using greedy algorithm")
     
     # Max protein with item limit
     run_command("python3 nutrition_cli.py max-protein 2000 --items 3 --algorithm ilp", 
