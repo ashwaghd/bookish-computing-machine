@@ -1,3 +1,4 @@
+![Screenshot from 2025-04-29 16-24-49](https://github.com/user-attachments/assets/aedc637a-7f55-477c-b99f-8a1bc3040a7f)
 # Fast Food Nutrition Database CLI
 
 A command-line application for analyzing fast food nutrition data using various optimization algorithms. This tool helps users find the best combinations of fast food items to maximize or balance nutritional values.
